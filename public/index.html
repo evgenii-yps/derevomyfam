@@ -1,10 +1,204 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Древо Бобровых</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Древо Бобровых</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f0eb;--bg2:#ede7df;--card:#fffcf8;--text:#2c2418;--text2:#6b5d4f;--text3:#9e8e7c;--accent:#8b6f47;--accent-light:#d4c4a8;--border:#d9cfc2;--shadow-hover:0 8px 32px rgba(44,36,24,.14);--radius:12px;--serif:'Cormorant Garamond',Georgia,serif;--sans:'Nunito Sans',system-ui,sans-serif;--male:#5a7a8c;--female:#8c5a6b;--deceased:#9e8e7c}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 0%,rgba(200,169,110,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(139,111,71,.06) 0%,transparent 60%);pointer-events:none;z-index:0}
+.header{position:sticky;top:0;z-index:100;background:rgba(245,240,235,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font-family:var(--serif);font-size:1.6rem;font-weight:600;color:var(--accent)}
+.logo span{font-weight:300;color:var(--text3);margin-left:6px}
+.nav{display:flex;gap:4px}
+.nav-btn{font-family:var(--sans);font-size:.85rem;font-weight:600;padding:8px 16px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-radius:8px;transition:all .2s}
+.nav-btn:hover{background:var(--bg2);color:var(--text)}
+.nav-btn.active{background:var(--accent);color:#fff}
+.hero{text-align:center;padding:80px 24px 60px;position:relative;z-index:1}
+.hero h1{font-family:var(--serif);font-size:clamp(2.5rem,6vw,4.5rem);font-weight:300;color:var(--text);line-height:1.1;margin-bottom:12px}
+.hero h1 strong{font-weight:700;color:var(--accent)}
+.hero p{font-size:1.05rem;color:var(--text3);max-width:500px;margin:0 auto;line-height:1.6}
+.hero-line{width:60px;height:2px;background:var(--accent-light);margin:24px auto 0}
+.stats{display:flex;justify-content:center;gap:48px;padding:0 24px 60px;position:relative;z-index:1;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-num{font-family:var(--serif);font-size:2.8rem;font-weight:700;color:var(--accent)}
+.stat-label{font-size:.8rem;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;margin-top:4px}
+.search-wrap{max-width:500px;margin:0 auto 40px;padding:0 24px;position:relative;z-index:1}
+.search-input{width:100%;padding:14px 20px 14px 48px;border:1px solid var(--border);border-radius:50px;background:var(--card);font-family:var(--sans);font-size:.95rem;color:var(--text);outline:none;transition:all .2s}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,111,71,.1)}
+.search-input::placeholder{color:var(--text3)}
+.search-icon{position:absolute;left:42px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.filters{display:flex;justify-content:center;gap:8px;padding:0 24px 40px;flex-wrap:wrap;position:relative;z-index:1}
+.filter-btn{font-family:var(--sans);font-size:.78rem;font-weight:600;padding:6px 14px;border:1px solid var(--border);background:var(--card);color:var(--text2);cursor:pointer;border-radius:20px;transition:all .2s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--accent-light);color:var(--accent)}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.gen-section{max-width:1200px;margin:0 auto 48px;padding:0 24px;position:relative;z-index:1}
+.gen-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.gen-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.gen-title{font-family:var(--serif);font-size:1.5rem;font-weight:600;color:var(--text)}
+.gen-count{font-size:.8rem;color:var(--text3);margin-left:4px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.person-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.person-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover);border-color:var(--accent-light)}
+.person-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity .3s}
+.person-card:hover::before{opacity:1}
+.person-card.male::before{background:var(--male)}
+.person-card.female::before{background:var(--female)}
+.card-relation{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;font-weight:600}
+.card-name{font-family:var(--serif);font-size:1.15rem;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px}
+.card-maiden{font-size:.8rem;color:var(--text3);font-style:italic;margin-bottom:6px}
+.card-dates{font-size:.82rem;color:var(--text2);display:flex;align-items:center;gap:6px}
+.card-alive{display:inline-block;width:6px;height:6px;background:#6b9e5e;border-radius:50%;margin-right:4px}
+.card-deceased{color:var(--deceased)}
+.card-ya{position:absolute;top:12px;right:12px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.08em}
+.modal-overlay{position:fixed;inset:0;background:rgba(44,36,24,.5);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:32px;box-shadow:0 24px 80px rgba(44,36,24,.25);transform:scale(.95);transition:transform .3s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text3);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px}
+.modal-close:hover{background:var(--bg2);color:var(--text)}
+.modal-relation{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:700;margin-bottom:8px}
+.modal-name{font-family:var(--serif);font-size:1.8rem;font-weight:600;color:var(--text);line-height:1.2;margin-bottom:4px}
+.modal-maiden{font-size:.9rem;color:var(--text3);font-style:italic;margin-bottom:16px}
+.modal-dates{font-size:.95rem;color:var(--text2);margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.modal-section{margin-bottom:16px}
+.modal-section-title{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:700;margin-bottom:6px}
+.modal-relatives{display:flex;flex-wrap:wrap;gap:6px}
+.modal-rel-tag{font-size:.78rem;padding:4px 10px;background:var(--bg2);border-radius:6px;color:var(--text2);cursor:pointer;transition:all .2s}
+.modal-rel-tag:hover{background:var(--accent-light);color:var(--accent)}
+.footer{text-align:center;padding:40px 24px;border-top:1px solid var(--border);color:var(--text3);font-size:.8rem;position:relative;z-index:1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .5s ease both}
+@media(max-width:640px){.hero{padding:48px 16px 36px}.hero h1{font-size:2rem}.stats{gap:24px}.stat-num{font-size:2rem}.cards-grid{grid-template-columns:1fr}.header-inner{height:56px}.logo{font-size:1.2rem}.nav-btn{font-size:.75rem;padding:6px 10px}}
+</style>
 </head>
 <body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useMemo}=React;
+const people=[
+{id:1,name:"Флегонт",dates:"",relation:"Пра(3)дед",generation:0,gender:"m",parents:[]},
+{id:2,name:"Флегонтов Иван Антонович",dates:"01.05.1893 – 31.01.1972",relation:"Прапрадед",generation:1,gender:"m",parents:[1]},
+{id:3,name:"Флегонтова Анна Дмитриевна",dates:"1894 – 02.10.1958",relation:"Прапрабабушка",generation:1,gender:"f",parents:[],spouses:[2]},
+{id:4,name:"Флегонтова Анастасия Ивановна",dates:"20.10.1934 – 11.08.2005",relation:"Двоюродная прабабушка",generation:2,gender:"f",parents:[2,3]},
+{id:5,name:"Флегонтова Вера Ивановна",dates:"",relation:"Двоюродная прабабушка",generation:2,gender:"f",parents:[2,3]},
+{id:6,name:"Флегонтов Иван Иванович",dates:"? – 05.07.1967",relation:"Двоюродный прадед",generation:2,gender:"m",parents:[2,3]},
+{id:7,name:"Бобров Николай Степанович",dates:"10.11.1910 – 01.01.1980",relation:"Прадедушка",generation:2,gender:"m",parents:[]},
+{id:8,name:"Боброва Елизавета Александровна",maiden:"Румянцева",dates:"09.08.1912 – 01.01.1996",relation:"Прабабушка",generation:2,gender:"f",parents:[],spouses:[7]},
+{id:9,name:"Добрецов Константин Андреевич",dates:"29.01.1918 – 25.03.1988",relation:"Прадедушка",generation:2,gender:"m",parents:[]},
+{id:10,name:"Добрецова Анна Ивановна",maiden:"Флегонтова",dates:"10.08.1919 – 17.04.2010",relation:"Прабабушка",generation:2,gender:"f",parents:[2,3],spouses:[9]},
+{id:11,name:"Саловьев Василий Петрович",dates:"1918 – 1941",relation:"Прадедушка",generation:2,gender:"m",parents:[]},
+{id:12,name:"Рюмшин Павел",dates:"",relation:"Прадедушка",generation:2,gender:"m",parents:[]},
+{id:13,name:"Рюмшина Капиталина Дмитриевна",dates:"",relation:"Прабабушка",generation:2,gender:"f",parents:[],spouses:[12]},
+{id:14,name:"Мохов Александр",dates:"",relation:"Прадедушка",generation:2,gender:"m",parents:[]},
+{id:15,name:"Мохова Мария",dates:"",relation:"Прабабушка",generation:2,gender:"f",parents:[],spouses:[14]},
+{id:16,name:"Добрецов Владимир Константинович",dates:"07.01.1947 – 18.10.2004",relation:"Двоюродный дед",generation:3,gender:"m",parents:[9,10]},
+{id:17,name:"Кошелев Сергей Васильевич",dates:"19.01.1952 – 29.03.2013",relation:"",generation:3,gender:"m",parents:[]},
+{id:18,name:"Бондоренко Ольга Константиновна",maiden:"Добрецова",dates:"13.03.1955",relation:"Двоюродная бабушка",generation:3,gender:"f",parents:[9,10],spouses:[19]},
+{id:19,name:"Бондоренко Николай Семенович",dates:"02.04.1952 – 12.06.2013",relation:"",generation:3,gender:"m",parents:[],spouses:[18]},
+{id:20,name:"Кувалов Валерий Романович",dates:"22.04.1954 – 31.01.2015",relation:"",generation:3,gender:"m",parents:[]},
+{id:21,name:"Бобров Сергей Николаевич",dates:"23.03.1952 – 16.10.2022",relation:"Дедушка",generation:3,gender:"m",parents:[7,8]},
+{id:22,name:"Боброва Наталья Константиновна",maiden:"Добрецова",dates:"05.04.1954",relation:"Бабушка",generation:3,gender:"f",parents:[9,10],spouses:[21]},
+{id:23,name:"Боброва Алевтина",dates:"? – 2006",relation:"",generation:3,gender:"f",parents:[7,8]},
+{id:24,name:"Бобров Борис Николаевич",dates:"01.01.1947 – 01.01.1977",relation:"Двоюродный дед",generation:3,gender:"m",parents:[7,8]},
+{id:25,name:"Боброва Галина",dates:"",relation:"",generation:3,gender:"f",parents:[7,8]},
+{id:26,name:"Кострова Александра Николаевна",maiden:"Боброва",dates:"10.06.1950 – 01.01.1995",relation:"Двоюродная бабушка",generation:3,gender:"f",parents:[7,8]},
+{id:27,name:"Костров Владимир",dates:"? – 01.01.1993",relation:"",generation:3,gender:"m",parents:[],spouses:[26]},
+{id:28,name:"Боброва Валентина Николаевна",maiden:"Комиссарова",dates:"10.06.1950",relation:"Двоюродная бабушка",generation:3,gender:"f",parents:[7,8]},
+{id:29,name:"Комиссаров Алексей",dates:"",relation:"",generation:3,gender:"m",parents:[],spouses:[28]},
+{id:30,name:"Рюмшин Геннадий Павлович",dates:"",relation:"Дедушка",generation:3,gender:"m",parents:[12,13]},
+{id:31,name:"Рюмшина Римма Александровна",maiden:"Мохова",dates:"",relation:"Бабушка",generation:3,gender:"f",parents:[14,15],spouses:[30]},
+{id:32,name:"Рюмшин Рудик Павлович",dates:"",relation:"Двоюродный дед",generation:3,gender:"m",parents:[12,13]},
+{id:33,name:"Рюмшин Юрий Павлович",dates:"",relation:"Двоюродный дед",generation:3,gender:"m",parents:[12,13]},
+{id:34,name:"Мохова Александра Александровна",dates:"",relation:"Двоюродная бабушка",generation:3,gender:"f",parents:[14,15]},
+{id:35,name:"Мохова Тамара Александровна",dates:"",relation:"Двоюродная бабушка",generation:3,gender:"f",parents:[14,15]},
+{id:36,name:"Мохов Юрий Александрович",dates:"",relation:"Двоюродный дед",generation:3,gender:"m",parents:[14,15]},
+{id:55,name:"Бобров Анатолий Николаевич",dates:"01.01.1937 – 01.01.2007",relation:"Двоюродный дед",generation:3,gender:"m",parents:[7,8]},
+{id:65,name:"Вайник Владимир",dates:"29.07.1955 – 01.01.2021",relation:"",generation:3,gender:"m",parents:[]},
+{id:66,name:"Боброва Галина Николаевна",maiden:"Борисенко, Вайник",dates:"18.05.1954",relation:"Двоюродная бабушка",generation:3,gender:"f",parents:[7,8],spouses:[65]},
+{id:67,name:"Борисенко Леонид",dates:"01.01.1954",relation:"",generation:3,gender:"m",parents:[]},
+{id:68,name:"Анисимова Людмила Васильевна",maiden:"Саловьева",dates:"01.05.1939",relation:"Двоюродная бабушка",generation:3,gender:"f",parents:[11]},
+{id:40,name:"Бобров Дмитрий Сергеевич",dates:"14.10.1974",relation:"Дядя",generation:4,gender:"m",parents:[21,22]},
+{id:41,name:"Бобров Константин Сергеевич",dates:"10.02.1981",relation:"Отец",generation:4,gender:"m",parents:[21,22]},
+{id:42,name:"Гиниатулина Наталья Геннадьевна",maiden:"Рюмшина",dates:"13.11.1976",relation:"Мать",generation:4,gender:"f",parents:[30,31],spouses:[41]},
+{id:43,name:"Рюмшин Олег Геннадьевич",dates:"",relation:"Дядя",generation:4,gender:"m",parents:[30,31]},
+{id:44,name:"Рюмшина Елена",dates:"",relation:"",generation:4,gender:"f",parents:[30,31]},
+{id:45,name:"Рюмшин Сергей Геннадьевич",dates:"",relation:"Дядя",generation:4,gender:"m",parents:[30,31]},
+{id:46,name:"Рюмшина Татьяна",dates:"",relation:"",generation:4,gender:"f",parents:[30,31]},
+{id:47,name:"Мохов Юрий",dates:"",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[36]},
+{id:48,name:"Мохова Ольга",dates:"",relation:"Двоюродная тётя",generation:4,gender:"f",parents:[36]},
+{id:49,name:"Мохов Вячеслав",dates:"",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[36]},
+{id:50,name:"Мохова Светлана",dates:"",relation:"Двоюродная тётя",generation:4,gender:"f",parents:[36]},
+{id:51,name:"Медведкова Лариса Владимировна",maiden:"Добрецова",dates:"23.07.1970",relation:"Двоюродная тётя",generation:4,gender:"f",parents:[16]},
+{id:52,name:"Добрецов Павел Владимирович",dates:"28.08.1977 – 2010",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[16]},
+{id:53,name:"Кошелев Анатолий Сергеевич",dates:"03.07.1989",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[17,18]},
+{id:54,name:"Бондоренко Сергей Николаевич",dates:"29.10.1973",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[19,18]},
+{id:56,name:"Бобров Валентин Анатольевич",dates:"1954 – ?",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[55]},
+{id:57,name:"Бобров Александр Анатольевич",dates:"1960",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[55]},
+{id:58,name:"Бобров Александр Борисович",dates:"17.12.1968",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[24]},
+{id:59,name:"Боброва Людмила",dates:"1972",relation:"",generation:4,gender:"f",parents:[24]},
+{id:60,name:"Родина Елена Владимировна",maiden:"Кострова",dates:"04.09.1979",relation:"Двоюродная тётя",generation:4,gender:"f",parents:[26,27]},
+{id:61,name:"Родин Сергей",dates:"",relation:"",generation:4,gender:"m",parents:[],spouses:[60]},
+{id:62,name:"Комиссарова Ольга Алексеевна",dates:"01.01.1970",relation:"Двоюродная тётя",generation:4,gender:"f",parents:[28,29]},
+{id:63,name:"Комиссаров Сергей Алексеевич",dates:"01.01.1976",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[28,29]},
+{id:64,name:"Комиссарова Наталья",dates:"",relation:"",generation:4,gender:"f",parents:[28,29]},
+{id:69,name:"Вайник Виктор Владимирович",dates:"18.08.1990",relation:"Двоюродный дядя",generation:4,gender:"m",parents:[65,66]},
+{id:70,name:"Митрофанова Светлана Леонидовна",maiden:"Борисенко",dates:"17.03.1974",relation:"Двоюродная тётя",generation:4,gender:"f",parents:[67,66]},
+{id:71,name:"Абелева Татьяна Николаевна",dates:"08.07.1968",relation:"Двоюродная тётя",generation:4,gender:"f",parents:[68]},
+{id:80,name:"Бобров Евгений Константинович",dates:"25.07.2006",relation:"Я",generation:5,gender:"m",parents:[41,42],isMe:true},
+{id:81,name:"Гуляева Александра Тимуровна",maiden:"Гиниатулина",dates:"",relation:"Сестра",generation:5,gender:"f",parents:[42]},
+{id:82,name:"Гуляев Максим Сергеевич",dates:"",relation:"",generation:5,gender:"m",parents:[]},
+{id:83,name:"Рюмшин Александр Олегович",dates:"",relation:"Двоюродный брат",generation:5,gender:"m",parents:[43]},
+{id:84,name:"Рюмшин Илья Олегович",dates:"",relation:"Двоюродный брат",generation:5,gender:"m",parents:[43]},
+{id:85,name:"Рюмшин Артем Сергеевич",dates:"",relation:"Двоюродный брат",generation:5,gender:"m",parents:[45]},
+{id:86,name:"Рюмшина София Сергеевна",dates:"",relation:"Двоюродная сестра",generation:5,gender:"f",parents:[45]},
+{id:87,name:"Ермолин Илья Дмитриевич",dates:"06.12.1995",relation:"Двоюродный брат",generation:5,gender:"m",parents:[40]},
+{id:88,name:"Боброва Татьяна Александровна",dates:"12.12.1991",relation:"Троюродная сестра",generation:5,gender:"f",parents:[58]},
+{id:89,name:"Бобров Александр Александрович",dates:"27.09.1998",relation:"Троюродный брат",generation:5,gender:"m",parents:[58]},
+{id:90,name:"Боброва Анжелика",maiden:"Разумова",dates:"01.06.2000",relation:"",generation:5,gender:"f",parents:[],spouses:[89]},
+{id:91,name:"Родина Ульяна Сергеевна",dates:"01.01.2016",relation:"Троюродная сестра",generation:5,gender:"f",parents:[60,61]},
+{id:92,name:"Комиссаров Глеб",dates:"01.01.2008",relation:"Троюродный брат",generation:5,gender:"m",parents:[62]},
+{id:93,name:"Комиссаров Константин Сергеевич",dates:"",relation:"Троюродный брат",generation:5,gender:"m",parents:[63]},
+{id:94,name:"Митрофанова Карина Олеговна",dates:"01.01.1995",relation:"Троюродная сестра",generation:5,gender:"f",parents:[70]},
+{id:95,name:"Митрофанова Кристина Денисовна",dates:"01.01.2005",relation:"Троюродная сестра",generation:5,gender:"f",parents:[70]},
+{id:96,name:"Свинарчук Наталья Артуровна",maiden:"Абелева",dates:"29.07.1988",relation:"Троюродная сестра",generation:5,gender:"f",parents:[71]},
+{id:97,name:"Смирнова Дарья Артуровна",maiden:"Абелева",dates:"15.11.1989",relation:"Троюродная сестра",generation:5,gender:"f",parents:[71]},
+{id:98,name:"Смирнов Алексей",dates:"",relation:"",generation:5,gender:"m",parents:[],spouses:[97]},
+{id:99,name:"Виктория Николаевна",maiden:"Злобина",dates:"20.05.1988",relation:"Троюродная сестра",generation:5,gender:"f",parents:[51]},
+{id:100,name:"Медведкова Анна Павловна",dates:"08.08.1997",relation:"Троюродная сестра",generation:5,gender:"f",parents:[52]},
+{id:101,name:"Медведкова Татьяна Павловна",dates:"24.01.2001",relation:"Троюродная сестра",generation:5,gender:"f",parents:[52]},
+{id:102,name:"Бондоренко Семен Сергеевич",dates:"09.07.1997",relation:"Троюродный брат",generation:5,gender:"m",parents:[54]},
+{id:110,name:"Харитонова Лиза Алексеевна",dates:"02.04.2005",relation:"Троюродная племянница",generation:6,gender:"f",parents:[96]},
+{id:111,name:"Михаил Юрьевич",dates:"23.10.2009",relation:"Троюродный племянник",generation:6,gender:"m",parents:[96]},
+{id:112,name:"Смирнова Анна Алексеевна",dates:"11.09.2015",relation:"Троюродная племянница",generation:6,gender:"f",parents:[97,98]},
+{id:113,name:"Диана",dates:"",relation:"Троюродная племянница",generation:6,gender:"f",parents:[99]},
+{id:114,name:"Бондоренко Алина Семеновна",dates:"",relation:"Троюродная племянница",generation:6,gender:"f",parents:[102]},
+{id:115,name:"Боброва Евгения Александровна",dates:"08.10.2024",relation:"Троюродная племянница",generation:6,gender:"f",parents:[89,90]},
+{id:116,name:"Рюмшин Захар Александрович",dates:"",relation:"Двоюродный племянник",generation:6,gender:"m",parents:[83]},
+{id:117,name:"Рюмшина Ева Ильинична",dates:"",relation:"Двоюродная племянница",generation:6,gender:"f",parents:[84]},
+{id:118,name:"Рюмшин Семен Ильич",dates:"",relation:"Двоюродный племянник",generation:6,gender:"m",parents:[84]},
+{id:119,name:"Рюмшина Виктория Артемовна",dates:"",relation:"Двоюродная племянница",generation:6,gender:"f",parents:[85]}
+];
+const genLabels={0:"Пра(3)деды",1:"Прапрадеды",2:"Прадеды",3:"Деды и бабушки",4:"Родители",5:"Наше поколение",6:"Младшее поколение"};
+const genColors={0:"#c8a96e",1:"#9e7c4e",2:"#7a8c5e",3:"#5a7a8c",4:"#6b5a8c",5:"#8c5a6b",6:"#5a8c7a"};
+const monthNames=["","января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+function parseDateStr(d){if(!d)return null;const p=d.split("–").map(s=>s.trim());const b=p[0];if(!b||b==="?")return null;const m=b.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(m)return{day:+m[1],month:+m[2],year:+m[3]};const m2=b.match(/(\d{4})/);if(m2)return{year:+m2[1]};return null}
+function isDeceased(d){return d?d.includes("–")&&d.split("–")[1].trim()!=="":false}
+function SearchIcon(){return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>}
+function CalendarIcon(){return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+function PersonCard({person,onClick}){return(<div className={`person-card fade-up ${person.gender==='m'?'male':'female'}`} onClick={()=>onClick(person)}>{person.isMe&&<div className="card-ya">Я</div>}{person.relation&&<div className="card-relation">{person.relation}</div>}<div className="card-name">{person.name}</div>{person.maiden&&<div className="card-maiden">урожд. {person.maiden}</div>}{person.dates&&<div className={`card-dates ${isDeceased(person.dates)?'card-deceased':''}`}>{!isDeceased(person.dates)&&person.dates&&<span className="card-alive"/>}<CalendarIcon/>{person.dates}</div>}</div>)}
+function Modal({person,onClose,onNavigate}){if(!person)return null;const ch=people.filter(p=>p.parents&&p.parents.includes(person.id));const pa=people.filter(p=>person.parents&&person.parents.includes(p.id));const sp=people.filter(p=>(person.spouses&&person.spouses.includes(p.id))||(p.spouses&&p.spouses.includes(person.id)));const si=people.filter(p=>p.id!==person.id&&person.parents&&person.parents.length>0&&p.parents&&p.parents.some(pid=>person.parents.includes(pid)));return(<div className="modal-overlay open" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()} style={{position:'relative'}}><button className="modal-close" onClick={onClose}>&times;</button>{person.relation&&<div className="modal-relation">{person.relation}</div>}<div className="modal-name">{person.name}</div>{person.maiden&&<div className="modal-maiden">урожд. {person.maiden}</div>}{person.dates&&<div className="modal-dates"><CalendarIcon/> {person.dates}{isDeceased(person.dates)&&" ✝"}</div>}{sp.length>0&&<div className="modal-section"><div className="modal-section-title">{person.gender==='m'?'Супруга':'Супруг'}</div><div className="modal-relatives">{sp.map(s=><span key={s.id} className="modal-rel-tag" onClick={()=>onNavigate(s)}>{s.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{pa.length>0&&<div className="modal-section"><div className="modal-section-title">Родители</div><div className="modal-relatives">{pa.map(p=><span key={p.id} className="modal-rel-tag" onClick={()=>onNavigate(p)}>{p.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{si.length>0&&<div className="modal-section"><div className="modal-section-title">Братья и сёстры</div><div className="modal-relatives">{si.map(s=><span key={s.id} className="modal-rel-tag" onClick={()=>onNavigate(s)}>{s.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{ch.length>0&&<div className="modal-section"><div className="modal-section-title">Дети</div><div className="modal-relatives">{ch.map(c=><span key={c.id} className="modal-rel-tag" onClick={()=>onNavigate(c)}>{c.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}</div></div>)}
+function App(){const[view,setView]=useState("tree");const[search,setSearch]=useState("");const[genFilter,setGenFilter]=useState(null);const[selectedPerson,setSelectedPerson]=useState(null);const filtered=useMemo(()=>{let list=people;if(search){const q=search.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.maiden&&p.maiden.toLowerCase().includes(q))||(p.relation&&p.relation.toLowerCase().includes(q))||(p.dates&&p.dates.includes(q)))}if(genFilter!==null)list=list.filter(p=>p.generation===genFilter);return list},[search,genFilter]);const generations=useMemo(()=>{const g={};filtered.forEach(p=>{if(!g[p.generation])g[p.generation]=[];g[p.generation].push(p)});return Object.entries(g).sort((a,b)=>+a[0]-+b[0])},[filtered]);const total=people.length;const totalGen=new Set(people.map(p=>p.generation)).size;const oldest=Math.min(...people.map(p=>{const d=parseDateStr(p.dates);return d?d.year:9999}).filter(y=>y<9999));const birthdays=useMemo(()=>people.map(p=>{const d=parseDateStr(p.dates);return d&&d.month?{...p,bday:d}:null}).filter(Boolean).filter(p=>!isDeceased(p.dates)).sort((a,b)=>a.bday.month-b.bday.month||(a.bday.day||1)-(b.bday.day||1)),[]);return(<><header className="header"><div className="header-inner"><div className="logo">Бобровы<span>· родословная</span></div><nav className="nav"><button className={`nav-btn ${view==='tree'?'active':''}`} onClick={()=>setView('tree')}>Древо</button><button className={`nav-btn ${view==='list'?'active':''}`} onClick={()=>setView('list')}>Список</button><button className={`nav-btn ${view==='dates'?'active':''}`} onClick={()=>setView('dates')}>Даты</button></nav></div></header><section className="hero"><h1>Древо семьи <strong>Бобровых</strong></h1><p>Родословная нашей семьи — от прапрадедов до самых маленьких</p><div className="hero-line"/></section><section className="stats"><div className="stat"><div className="stat-num">{total}</div><div className="stat-label">человек</div></div><div className="stat"><div className="stat-num">{totalGen}</div><div className="stat-label">поколений</div></div><div className="stat"><div className="stat-num">{oldest<9999?oldest:'—'}</div><div className="stat-label">самая ранняя дата</div></div></section>{(view==='tree'||view==='list')&&<><div className="search-wrap"><span className="search-icon"><SearchIcon/></span><input className="search-input" placeholder="Поиск по имени, фамилии, дате..." value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="filters"><button className={`filter-btn ${genFilter===null?'active':''}`} onClick={()=>setGenFilter(null)}>Все</button>{Object.entries(genLabels).map(([g,label])=><button key={g} className={`filter-btn ${genFilter===+g?'active':''}`} onClick={()=>setGenFilter(+g)}>{label}</button>)}</div></>}{(view==='tree'||view==='list')&&generations.map(([gen,persons])=><section className="gen-section" key={gen}><div className="gen-header"><div className="gen-dot" style={{background:genColors[gen]||'#999'}}/><div className="gen-title">{genLabels[gen]||'Поколение '+gen}</div><div className="gen-count">{persons.length} чел.</div></div><div className="cards-grid">{persons.map(p=><PersonCard key={p.id} person={p} onClick={setSelectedPerson}/>)}</div></section>)}{view==='dates'&&<div style={{maxWidth:700,margin:'0 auto',padding:'0 24px 60px',position:'relative',zIndex:1}}><h2 style={{fontFamily:'var(--serif)',fontSize:'1.8rem',fontWeight:600,textAlign:'center',marginBottom:32,color:'var(--text)'}}>Дни рождения</h2><p style={{textAlign:'center',color:'var(--text3)',marginBottom:32,fontSize:'.9rem'}}>Живые родственники с известными датами</p>{birthdays.map(p=><div key={p.id} style={{display:'flex',alignItems:'center',gap:16,padding:'12px 16px',background:'var(--card)',border:'1px solid var(--border)',borderRadius:'var(--radius)',marginBottom:8,cursor:'pointer'}} onClick={()=>setSelectedPerson(p)}><div style={{minWidth:56,textAlign:'center'}}><div style={{fontFamily:'var(--serif)',fontSize:'1.6rem',fontWeight:700,color:genColors[p.generation]||'var(--accent)',lineHeight:1}}>{p.bday.day||'?'}</div><div style={{fontSize:'.7rem',color:'var(--text3)',textTransform:'uppercase'}}>{monthNames[p.bday.month]}</div></div><div style={{flex:1}}><div style={{fontFamily:'var(--serif)',fontWeight:600,fontSize:'1rem',color:'var(--text)'}}>{p.name}</div>{p.relation&&<div style={{fontSize:'.75rem',color:'var(--text3)'}}>{p.relation}</div>}</div>{p.bday.year&&<div style={{fontSize:'.8rem',color:'var(--text3)'}}>{p.bday.year} г.р.</div>}</div>)}</div>}{selectedPerson&&<Modal person={selectedPerson} onClose={()=>setSelectedPerson(null)} onNavigate={setSelectedPerson}/>}<footer className="footer">Древо Бобровых · {new Date().getFullYear()} · Сделано с любовью для семьи</footer></>)}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
 </html>
