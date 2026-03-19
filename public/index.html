@@ -94,6 +94,28 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tree-gen-label{position:absolute;left:4px;width:94px;text-align:right;padding-right:8px;font-family:var(--serif);font-size:.75rem;font-weight:600;color:var(--text3);z-index:3;line-height:1.2}
 .tree-lines{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
 .tree-couple-line{position:absolute;height:2px;background:var(--accent-light);z-index:3}
+.card-edit-btns{position:absolute;top:8px;right:8px;display:flex;gap:4px;z-index:5}
+.edit-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--text2);transition:all .2s;padding:0}
+.edit-btn:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.edit-btn-del:hover{background:#f8d7da;color:#c0392b;border-color:#c0392b}
+.add-card{border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;color:var(--text3);transition:all .2s;font-size:.9rem;background:transparent}
+.add-card:hover{border-color:var(--accent);color:var(--accent)}
+.form-row{margin-bottom:16px}
+.form-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:700;margin-bottom:4px;display:block}
+.form-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:.9rem;color:var(--text);background:var(--card);outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent)}
+.btn-save{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;font-family:var(--sans);font-size:.85rem;cursor:pointer;transition:opacity .2s}
+.btn-save:hover{opacity:.9}
+.btn-cancel{background:transparent;border:1px solid var(--border);padding:10px 24px;border-radius:8px;font-family:var(--sans);font-size:.85rem;cursor:pointer;color:var(--text2);transition:all .2s}
+.btn-cancel:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:#c0392b;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;font-family:var(--sans);font-size:.85rem;cursor:pointer}
+.person-search{position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--card);z-index:10;box-shadow:0 4px 16px rgba(44,36,24,.12);margin-top:4px}
+.person-search-item{padding:8px 14px;cursor:pointer;font-size:.85rem;border-bottom:1px solid var(--bg2);color:var(--text)}
+.person-search-item:last-child{border-bottom:none}
+.person-search-item:hover{background:var(--bg2)}
+.nav-btn.edit-active{background:#27ae60;color:#fff;border-color:#27ae60}
+.btn-reset{font-family:var(--sans);font-size:.7rem;padding:4px 12px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;border-radius:6px;transition:all .2s}
+.btn-reset:hover{border-color:#c0392b;color:#c0392b}
 </style>
 </head>
 <body>
@@ -102,8 +124,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <script type="text/babel">
-const {useState,useMemo,useRef,useEffect}=React;
-const people=[
+const {useState,useMemo,useRef,useEffect,useCallback}=React;
+const defaultPeople=[
 {id:1,name:"Флегонт",dates:"",relation:"Пра(3)дед",generation:0,gender:"m",parents:[]},
 {id:2,name:"Флегонтов Иван Антонович",dates:"01.05.1893 – 31.01.1972",relation:"Прапрадед",generation:1,gender:"m",parents:[1]},
 {id:3,name:"Флегонтова Анна Дмитриевна",dates:"1894 – 02.10.1958",relation:"Прапрабабушка",generation:1,gender:"f",parents:[],spouses:[2]},
@@ -206,16 +228,48 @@ const people=[
 {id:118,name:"Рюмшин Семен Ильич",dates:"",relation:"Двоюродный племянник",generation:6,gender:"m",parents:[84]},
 {id:119,name:"Рюмшина Виктория Артемовна",dates:"",relation:"Двоюродная племянница",generation:6,gender:"f",parents:[85]}
 ];
+let people=(()=>{try{const s=localStorage.getItem('bobrov_tree_data');if(s)return JSON.parse(s)}catch(e){}return JSON.parse(JSON.stringify(defaultPeople))})();
+function savePeople(){localStorage.setItem('bobrov_tree_data',JSON.stringify(people))}
 const genLabels={0:"Пра(3)деды",1:"Прапрадеды",2:"Прадеды",3:"Деды и бабушки",4:"Родители",5:"Наше поколение",6:"Младшее поколение"};
 const genColors={0:"#c8a96e",1:"#9e7c4e",2:"#7a8c5e",3:"#5a7a8c",4:"#6b5a8c",5:"#8c5a6b",6:"#5a8c7a"};
 const monthNames=["","января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 function parseDateStr(d){if(!d)return null;const p=d.split("–").map(s=>s.trim());const b=p[0];if(!b||b==="?")return null;const m=b.match(/(\d{2})\.(\d{2})\.(\d{4})/);if(m)return{day:+m[1],month:+m[2],year:+m[3]};const m2=b.match(/(\d{4})/);if(m2)return{year:+m2[1]};return null}
 function isDeceased(d){return d?d.includes("–")&&d.split("–")[1].trim()!=="":false}
+function PencilIcon(){return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>}
+function PersonSearch({onSelect,exclude=[]}){const[q,setQ]=useState("");const results=q.length>=1?people.filter(p=>!exclude.includes(p.id)&&p.name.toLowerCase().includes(q.toLowerCase())).slice(0,8):[];return(<div style={{position:'relative'}}><input className="form-input" placeholder="Поиск по имени..." value={q} onChange={e=>setQ(e.target.value)}/>{results.length>0&&<div className="person-search">{results.map(p=><div key={p.id} className="person-search-item" onClick={()=>{onSelect(p);setQ("")}}>{p.name}{p.dates&&<span style={{color:'var(--text3)',fontSize:'.75rem',marginLeft:8}}>{p.dates}</span>}</div>)}</div>}</div>)}
+function EditModal({person,onSave,onClose}){
+const isNew=!person.id;
+const initSpouses=useMemo(()=>{if(isNew)return[...(person.spouses||[])];const direct=[...(person.spouses||[])];people.forEach(p=>{if(p.spouses&&p.spouses.includes(person.id)&&!direct.includes(p.id))direct.push(p.id)});return direct},[person]);
+const[name,setName]=useState(person.name||'');
+const[maiden,setMaiden]=useState(person.maiden||'');
+const[dates,setDates]=useState(person.dates||'');
+const[relation,setRelation]=useState(person.relation||'');
+const[gender,setGender]=useState(person.gender||'m');
+const[generation,setGeneration]=useState(person.generation??5);
+const[parents,setParents]=useState([...(person.parents||[])]);
+const[spouses,setSpouses]=useState(initSpouses);
+const handleSave=()=>{if(!name.trim())return;onSave({name:name.trim(),maiden:maiden.trim(),dates:dates.trim(),relation:relation.trim(),gender,generation,parents,spouses})};
+return(<div className="modal-overlay open" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()} style={{position:'relative'}}>
+<button className="modal-close" onClick={onClose}>&times;</button>
+<div className="modal-name" style={{marginBottom:20}}>{isNew?'Новый человек':'Редактирование'}</div>
+<div className="form-row"><label className="form-label">ФИО</label><input className="form-input" value={name} onChange={e=>setName(e.target.value)}/></div>
+<div className="form-row"><label className="form-label">Девичья фамилия</label><input className="form-input" value={maiden} onChange={e=>setMaiden(e.target.value)}/></div>
+<div className="form-row"><label className="form-label">Даты</label><input className="form-input" value={dates} onChange={e=>setDates(e.target.value)} placeholder="ДД.ММ.ГГГГ или ДД.ММ.ГГГГ – ДД.ММ.ГГГГ"/></div>
+<div className="form-row"><label className="form-label">Степень родства</label><input className="form-input" value={relation} onChange={e=>setRelation(e.target.value)}/></div>
+<div style={{display:'flex',gap:16,marginBottom:16}}>
+<div style={{flex:1}}><label className="form-label">Пол</label><select className="form-input" value={gender} onChange={e=>setGender(e.target.value)}><option value="m">Мужской</option><option value="f">Женский</option></select></div>
+<div style={{flex:1}}><label className="form-label">Поколение</label><select className="form-input" value={generation} onChange={e=>setGeneration(+e.target.value)}>{Object.entries(genLabels).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div></div>
+<div className="form-row"><label className="form-label">Родители</label><div className="modal-relatives" style={{marginBottom:8}}>{parents.map(pid=>{const pp=people.find(p=>p.id===pid);return pp?<span key={pid} className="modal-rel-tag">{pp.name.split(' ').slice(0,2).join(' ')}<span style={{marginLeft:6,cursor:'pointer',color:'var(--text3)'}} onClick={()=>setParents(parents.filter(id=>id!==pid))}>×</span></span>:null})}</div>
+<PersonSearch exclude={[person.id||0,...parents]} onSelect={p=>setParents([...parents,p.id])}/></div>
+<div className="form-row"><label className="form-label">Супруг(а)</label><div className="modal-relatives" style={{marginBottom:8}}>{spouses.map(sid=>{const sp=people.find(p=>p.id===sid);return sp?<span key={sid} className="modal-rel-tag">{sp.name.split(' ').slice(0,2).join(' ')}<span style={{marginLeft:6,cursor:'pointer',color:'var(--text3)'}} onClick={()=>setSpouses(spouses.filter(id=>id!==sid))}>×</span></span>:null})}</div>
+<PersonSearch exclude={[person.id||0,...spouses]} onSelect={p=>setSpouses([...spouses,p.id])}/></div>
+<div style={{display:'flex',gap:12,marginTop:24}}><button className="btn-save" onClick={handleSave}>Сохранить</button><button className="btn-cancel" onClick={onClose}>Отмена</button></div>
+</div></div>)}
 function SearchIcon(){return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>}
 function CalendarIcon(){return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
-function PersonCard({person,onClick}){return(<div className={`person-card fade-up ${person.gender==='m'?'male':'female'}`} onClick={()=>onClick(person)}>{person.isMe&&<div className="card-ya">Я</div>}{person.relation&&<div className="card-relation">{person.relation}</div>}<div className="card-name">{person.name}</div>{person.maiden&&<div className="card-maiden">урожд. {person.maiden}</div>}{person.dates&&<div className={`card-dates ${isDeceased(person.dates)?'card-deceased':''}`}>{!isDeceased(person.dates)&&person.dates&&<span className="card-alive"/>}<CalendarIcon/>{person.dates}</div>}</div>)}
-function Modal({person,onClose,onNavigate}){if(!person)return null;const ch=people.filter(p=>p.parents&&p.parents.includes(person.id));const pa=people.filter(p=>person.parents&&person.parents.includes(p.id));const sp=people.filter(p=>(person.spouses&&person.spouses.includes(p.id))||(p.spouses&&p.spouses.includes(person.id)));const si=people.filter(p=>p.id!==person.id&&person.parents&&person.parents.length>0&&p.parents&&p.parents.some(pid=>person.parents.includes(pid)));return(<div className="modal-overlay open" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()} style={{position:'relative'}}><button className="modal-close" onClick={onClose}>&times;</button>{person.relation&&<div className="modal-relation">{person.relation}</div>}<div className="modal-name">{person.name}</div>{person.maiden&&<div className="modal-maiden">урожд. {person.maiden}</div>}{person.dates&&<div className="modal-dates"><CalendarIcon/> {person.dates}{isDeceased(person.dates)&&" ✝"}</div>}{sp.length>0&&<div className="modal-section"><div className="modal-section-title">{person.gender==='m'?'Супруга':'Супруг'}</div><div className="modal-relatives">{sp.map(s=><span key={s.id} className="modal-rel-tag" onClick={()=>onNavigate(s)}>{s.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{pa.length>0&&<div className="modal-section"><div className="modal-section-title">Родители</div><div className="modal-relatives">{pa.map(p=><span key={p.id} className="modal-rel-tag" onClick={()=>onNavigate(p)}>{p.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{si.length>0&&<div className="modal-section"><div className="modal-section-title">Братья и сёстры</div><div className="modal-relatives">{si.map(s=><span key={s.id} className="modal-rel-tag" onClick={()=>onNavigate(s)}>{s.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{ch.length>0&&<div className="modal-section"><div className="modal-section-title">Дети</div><div className="modal-relatives">{ch.map(c=><span key={c.id} className="modal-rel-tag" onClick={()=>onNavigate(c)}>{c.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}</div></div>)}
-function TreeView({onSelect}){
+function PersonCard({person,onClick,editMode,onEdit,onDelete}){return(<div className={`person-card fade-up ${person.gender==='m'?'male':'female'}`} onClick={()=>onClick(person)}>{person.isMe&&<div className="card-ya" style={editMode?{right:72}:undefined}>Я</div>}{editMode&&<div className="card-edit-btns"><button className="edit-btn" onClick={e=>{e.stopPropagation();onEdit(person)}} title="Редактировать"><PencilIcon/></button><button className="edit-btn edit-btn-del" onClick={e=>{e.stopPropagation();onDelete(person)}} title="Удалить">×</button></div>}{person.relation&&<div className="card-relation">{person.relation}</div>}<div className="card-name">{person.name}</div>{person.maiden&&<div className="card-maiden">урожд. {person.maiden}</div>}{person.dates&&<div className={`card-dates ${isDeceased(person.dates)?'card-deceased':''}`}>{!isDeceased(person.dates)&&person.dates&&<span className="card-alive"/>}<CalendarIcon/>{person.dates}</div>}</div>)}
+function Modal({person,onClose,onNavigate,onAddChild}){if(!person)return null;const ch=people.filter(p=>p.parents&&p.parents.includes(person.id));const pa=people.filter(p=>person.parents&&person.parents.includes(p.id));const sp=people.filter(p=>(person.spouses&&person.spouses.includes(p.id))||(p.spouses&&p.spouses.includes(person.id)));const si=people.filter(p=>p.id!==person.id&&person.parents&&person.parents.length>0&&p.parents&&p.parents.some(pid=>person.parents.includes(pid)));return(<div className="modal-overlay open" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()} style={{position:'relative'}}><button className="modal-close" onClick={onClose}>&times;</button>{person.relation&&<div className="modal-relation">{person.relation}</div>}<div className="modal-name">{person.name}</div>{person.maiden&&<div className="modal-maiden">урожд. {person.maiden}</div>}{person.dates&&<div className="modal-dates"><CalendarIcon/> {person.dates}{isDeceased(person.dates)&&" ✝"}</div>}{sp.length>0&&<div className="modal-section"><div className="modal-section-title">{person.gender==='m'?'Супруга':'Супруг'}</div><div className="modal-relatives">{sp.map(s=><span key={s.id} className="modal-rel-tag" onClick={()=>onNavigate(s)}>{s.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{pa.length>0&&<div className="modal-section"><div className="modal-section-title">Родители</div><div className="modal-relatives">{pa.map(p=><span key={p.id} className="modal-rel-tag" onClick={()=>onNavigate(p)}>{p.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{si.length>0&&<div className="modal-section"><div className="modal-section-title">Братья и сёстры</div><div className="modal-relatives">{si.map(s=><span key={s.id} className="modal-rel-tag" onClick={()=>onNavigate(s)}>{s.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{ch.length>0&&<div className="modal-section"><div className="modal-section-title">Дети</div><div className="modal-relatives">{ch.map(c=><span key={c.id} className="modal-rel-tag" onClick={()=>onNavigate(c)}>{c.name.split(' ').slice(0,2).join(' ')}</span>)}</div></div>}{onAddChild&&<div style={{marginTop:16,paddingTop:16,borderTop:'1px solid var(--border)'}}><button className="btn-save" style={{width:'100%',fontSize:'.8rem',padding:'8px 16px'}} onClick={()=>onAddChild(person)}>+ Добавить ребёнка</button></div>}</div></div>)}
+function TreeView({onSelect,dataVersion}){
 const scrollRef=useRef(null);
 const[scale,setScale]=useState(0.8);
 const NODE_W=140,NODE_H=52,GAP_X=28,GAP_Y=80,COUPLE_GAP=12,PAD_LEFT=110,PAD_TOP=24;
@@ -279,7 +333,7 @@ const allPos=Object.values(positions);
 const totalW=Math.max(...allPos.map(p=>p.x))+NODE_W+60;
 const totalH=Math.max(...allPos.map(p=>p.y))+NODE_H+60;
 return{positions,lines,coupleLinks,totalW,totalH,genKeys};
-},[]);
+},[dataVersion]);
 useEffect(()=>{
 if(!scrollRef.current)return;
 const me=people.find(p=>p.isMe);
@@ -314,7 +368,55 @@ onClick={()=>onSelect(p)}>
 </div>
 </div>
 </div>)}
-function App(){const[view,setView]=useState("tree");const[search,setSearch]=useState("");const[genFilter,setGenFilter]=useState(null);const[selectedPerson,setSelectedPerson]=useState(null);const filtered=useMemo(()=>{let list=people;if(search){const q=search.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.maiden&&p.maiden.toLowerCase().includes(q))||(p.relation&&p.relation.toLowerCase().includes(q))||(p.dates&&p.dates.includes(q)))}if(genFilter!==null)list=list.filter(p=>p.generation===genFilter);return list},[search,genFilter]);const generations=useMemo(()=>{const g={};filtered.forEach(p=>{if(!g[p.generation])g[p.generation]=[];g[p.generation].push(p)});return Object.entries(g).sort((a,b)=>+a[0]-+b[0])},[filtered]);const total=people.length;const totalGen=new Set(people.map(p=>p.generation)).size;const oldest=Math.min(...people.map(p=>{const d=parseDateStr(p.dates);return d?d.year:9999}).filter(y=>y<9999));const birthdays=useMemo(()=>people.map(p=>{const d=parseDateStr(p.dates);return d&&d.month?{...p,bday:d}:null}).filter(Boolean).filter(p=>!isDeceased(p.dates)).sort((a,b)=>a.bday.month-b.bday.month||(a.bday.day||1)-(b.bday.day||1)),[]);return(<><header className="header"><div className="header-inner"><div className="logo">Бобровы<span>· родословная</span></div><nav className="nav"><button className={`nav-btn ${view==='tree'?'active':''}`} onClick={()=>setView('tree')}>Древо</button><button className={`nav-btn ${view==='list'?'active':''}`} onClick={()=>setView('list')}>Список</button><button className={`nav-btn ${view==='dates'?'active':''}`} onClick={()=>setView('dates')}>Даты</button></nav></div></header><section className="hero"><h1>Древо семьи <strong>Бобровых</strong></h1><p>Родословная нашей семьи — от прапрадедов до самых маленьких</p><div className="hero-line"/></section><section className="stats"><div className="stat"><div className="stat-num">{total}</div><div className="stat-label">человек</div></div><div className="stat"><div className="stat-num">{totalGen}</div><div className="stat-label">поколений</div></div><div className="stat"><div className="stat-num">{oldest<9999?oldest:'—'}</div><div className="stat-label">самая ранняя дата</div></div></section>{view==='tree'&&<TreeView onSelect={setSelectedPerson}/>}{view==='list'&&<><div className="search-wrap"><span className="search-icon"><SearchIcon/></span><input className="search-input" placeholder="Поиск по имени, фамилии, дате..." value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="filters"><button className={`filter-btn ${genFilter===null?'active':''}`} onClick={()=>setGenFilter(null)}>Все</button>{Object.entries(genLabels).map(([g,label])=><button key={g} className={`filter-btn ${genFilter===+g?'active':''}`} onClick={()=>setGenFilter(+g)}>{label}</button>)}</div></>}{view==='list'&&generations.map(([gen,persons])=><section className="gen-section" key={gen}><div className="gen-header"><div className="gen-dot" style={{background:genColors[gen]||'#999'}}/><div className="gen-title">{genLabels[gen]||'Поколение '+gen}</div><div className="gen-count">{persons.length} чел.</div></div><div className="cards-grid">{persons.map(p=><PersonCard key={p.id} person={p} onClick={setSelectedPerson}/>)}</div></section>)}{view==='dates'&&<div style={{maxWidth:700,margin:'0 auto',padding:'0 24px 60px',position:'relative',zIndex:1}}><h2 style={{fontFamily:'var(--serif)',fontSize:'1.8rem',fontWeight:600,textAlign:'center',marginBottom:32,color:'var(--text)'}}>Дни рождения</h2><p style={{textAlign:'center',color:'var(--text3)',marginBottom:32,fontSize:'.9rem'}}>Живые родственники с известными датами</p>{birthdays.map(p=><div key={p.id} style={{display:'flex',alignItems:'center',gap:16,padding:'12px 16px',background:'var(--card)',border:'1px solid var(--border)',borderRadius:'var(--radius)',marginBottom:8,cursor:'pointer'}} onClick={()=>setSelectedPerson(p)}><div style={{minWidth:56,textAlign:'center'}}><div style={{fontFamily:'var(--serif)',fontSize:'1.6rem',fontWeight:700,color:genColors[p.generation]||'var(--accent)',lineHeight:1}}>{p.bday.day||'?'}</div><div style={{fontSize:'.7rem',color:'var(--text3)',textTransform:'uppercase'}}>{monthNames[p.bday.month]}</div></div><div style={{flex:1}}><div style={{fontFamily:'var(--serif)',fontWeight:600,fontSize:'1rem',color:'var(--text)'}}>{p.name}</div>{p.relation&&<div style={{fontSize:'.75rem',color:'var(--text3)'}}>{p.relation}</div>}</div>{p.bday.year&&<div style={{fontSize:'.8rem',color:'var(--text3)'}}>{p.bday.year} г.р.</div>}</div>)}</div>}{selectedPerson&&<Modal person={selectedPerson} onClose={()=>setSelectedPerson(null)} onNavigate={setSelectedPerson}/>}<footer className="footer">Древо Бобровых · {new Date().getFullYear()} · Сделано с любовью для семьи</footer></>)}
+function App(){
+const[view,setView]=useState("tree");
+const[search,setSearch]=useState("");
+const[genFilter,setGenFilter]=useState(null);
+const[selectedPerson,setSelectedPerson]=useState(null);
+const[editMode,setEditMode]=useState(false);
+const[editingPerson,setEditingPerson]=useState(null);
+const[dataVersion,setDataVersion]=useState(0);
+const refresh=useCallback(()=>setDataVersion(v=>v+1),[]);
+const handleSavePerson=useCallback((formData)=>{
+let personId;
+if(editingPerson._isNew){
+personId=Math.max(0,...people.map(p=>p.id))+1;
+const np={id:personId,name:formData.name,dates:formData.dates,relation:formData.relation,gender:formData.gender,generation:formData.generation,parents:formData.parents||[]};
+if(formData.maiden)np.maiden=formData.maiden;
+if(formData.spouses&&formData.spouses.length>0)np.spouses=formData.spouses;
+people.push(np);
+}else{
+personId=editingPerson.id;
+const idx=people.findIndex(p=>p.id===personId);
+if(idx>=0){
+const old=people[idx];
+(old.spouses||[]).forEach(sid=>{const sp=people.find(p=>p.id===sid);if(sp&&sp.spouses)sp.spouses=sp.spouses.filter(id=>id!==personId)});
+people[idx]={...old,name:formData.name,dates:formData.dates,relation:formData.relation,gender:formData.gender,generation:formData.generation,parents:formData.parents||[]};
+if(formData.maiden)people[idx].maiden=formData.maiden;else delete people[idx].maiden;
+if(formData.spouses&&formData.spouses.length>0)people[idx].spouses=formData.spouses;else delete people[idx].spouses;
+}}
+(formData.spouses||[]).forEach(sid=>{const sp=people.find(p=>p.id===sid);if(sp){if(!sp.spouses)sp.spouses=[];if(!sp.spouses.includes(personId))sp.spouses.push(personId)}});
+savePeople();setEditingPerson(null);refresh();
+},[editingPerson]);
+const handleDelete=useCallback((person)=>{
+if(!confirm('Удалить '+person.name+'?'))return;
+const idx=people.findIndex(p=>p.id===person.id);
+if(idx>=0){people.splice(idx,1);people.forEach(p=>{if(p.parents)p.parents=p.parents.filter(id=>id!==person.id);if(p.spouses)p.spouses=p.spouses.filter(id=>id!==person.id)});savePeople();refresh()}
+},[]);
+const handleAddChild=useCallback((parent)=>{
+setSelectedPerson(null);
+setEditingPerson({_isNew:true,name:'',generation:Math.min(parent.generation+1,6),gender:'m',parents:[parent.id],spouses:[]});
+},[]);
+const handleAddToGen=useCallback((gen)=>{
+setEditingPerson({_isNew:true,name:'',generation:gen,gender:'m',parents:[],spouses:[]});
+},[]);
+const filtered=useMemo(()=>{let list=people;if(search){const q=search.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.maiden&&p.maiden.toLowerCase().includes(q))||(p.relation&&p.relation.toLowerCase().includes(q))||(p.dates&&p.dates.includes(q)))}if(genFilter!==null)list=list.filter(p=>p.generation===genFilter);return list},[search,genFilter,dataVersion]);
+const generations=useMemo(()=>{const g={};filtered.forEach(p=>{if(!g[p.generation])g[p.generation]=[];g[p.generation].push(p)});return Object.entries(g).sort((a,b)=>+a[0]-+b[0])},[filtered]);
+const total=people.length;
+const totalGen=new Set(people.map(p=>p.generation)).size;
+const oldest=Math.min(...people.map(p=>{const d=parseDateStr(p.dates);return d?d.year:9999}).filter(y=>y<9999));
+const birthdays=useMemo(()=>people.map(p=>{const d=parseDateStr(p.dates);return d&&d.month?{...p,bday:d}:null}).filter(Boolean).filter(p=>!isDeceased(p.dates)).sort((a,b)=>a.bday.month-b.bday.month||(a.bday.day||1)-(b.bday.day||1)),[dataVersion]);
+return(<><header className="header"><div className="header-inner"><div className="logo">Бобровы<span>· родословная</span></div><nav className="nav"><button className={`nav-btn ${view==='tree'?'active':''}`} onClick={()=>setView('tree')}>Древо</button><button className={`nav-btn ${view==='list'?'active':''}`} onClick={()=>setView('list')}>Список</button><button className={`nav-btn ${view==='dates'?'active':''}`} onClick={()=>setView('dates')}>Даты</button><button className={`nav-btn ${editMode?'edit-active':''}`} onClick={()=>setEditMode(!editMode)}>{editMode?'✓ Готово':'✎ Редактировать'}</button></nav></div></header><section className="hero"><h1>Древо семьи <strong>Бобровых</strong></h1><p>Родословная нашей семьи — от прапрадедов до самых маленьких</p><div className="hero-line"/></section><section className="stats"><div className="stat"><div className="stat-num">{total}</div><div className="stat-label">человек</div></div><div className="stat"><div className="stat-num">{totalGen}</div><div className="stat-label">поколений</div></div><div className="stat"><div className="stat-num">{oldest<9999?oldest:'—'}</div><div className="stat-label">самая ранняя дата</div></div></section>{view==='tree'&&<TreeView onSelect={setSelectedPerson} dataVersion={dataVersion}/>}{view==='list'&&<><div className="search-wrap"><span className="search-icon"><SearchIcon/></span><input className="search-input" placeholder="Поиск по имени, фамилии, дате..." value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="filters"><button className={`filter-btn ${genFilter===null?'active':''}`} onClick={()=>setGenFilter(null)}>Все</button>{Object.entries(genLabels).map(([g,label])=><button key={g} className={`filter-btn ${genFilter===+g?'active':''}`} onClick={()=>setGenFilter(+g)}>{label}</button>)}</div></>}{view==='list'&&generations.map(([gen,persons])=><section className="gen-section" key={gen}><div className="gen-header"><div className="gen-dot" style={{background:genColors[gen]||'#999'}}/><div className="gen-title">{genLabels[gen]||'Поколение '+gen}</div><div className="gen-count">{persons.length} чел.</div></div><div className="cards-grid">{persons.map(p=><PersonCard key={p.id} person={p} onClick={setSelectedPerson} editMode={editMode} onEdit={setEditingPerson} onDelete={handleDelete}/>)}{editMode&&<div className="add-card" onClick={()=>handleAddToGen(+gen)}>+ Добавить</div>}</div></section>)}{view==='dates'&&<div style={{maxWidth:700,margin:'0 auto',padding:'0 24px 60px',position:'relative',zIndex:1}}><h2 style={{fontFamily:'var(--serif)',fontSize:'1.8rem',fontWeight:600,textAlign:'center',marginBottom:32,color:'var(--text)'}}>Дни рождения</h2><p style={{textAlign:'center',color:'var(--text3)',marginBottom:32,fontSize:'.9rem'}}>Живые родственники с известными датами</p>{birthdays.map(p=><div key={p.id} style={{display:'flex',alignItems:'center',gap:16,padding:'12px 16px',background:'var(--card)',border:'1px solid var(--border)',borderRadius:'var(--radius)',marginBottom:8,cursor:'pointer'}} onClick={()=>setSelectedPerson(p)}><div style={{minWidth:56,textAlign:'center'}}><div style={{fontFamily:'var(--serif)',fontSize:'1.6rem',fontWeight:700,color:genColors[p.generation]||'var(--accent)',lineHeight:1}}>{p.bday.day||'?'}</div><div style={{fontSize:'.7rem',color:'var(--text3)',textTransform:'uppercase'}}>{monthNames[p.bday.month]}</div></div><div style={{flex:1}}><div style={{fontFamily:'var(--serif)',fontWeight:600,fontSize:'1rem',color:'var(--text)'}}>{p.name}</div>{p.relation&&<div style={{fontSize:'.75rem',color:'var(--text3)'}}>{p.relation}</div>}</div>{p.bday.year&&<div style={{fontSize:'.8rem',color:'var(--text3)'}}>{p.bday.year} г.р.</div>}</div>)}</div>}{selectedPerson&&<Modal person={selectedPerson} onClose={()=>setSelectedPerson(null)} onNavigate={setSelectedPerson} onAddChild={handleAddChild}/>}{editingPerson&&<EditModal person={editingPerson} onSave={handleSavePerson} onClose={()=>setEditingPerson(null)}/>}<footer className="footer">Древо Бобровых · {new Date().getFullYear()} · Сделано с любовью для семьи<div style={{marginTop:12}}><button className="btn-reset" onClick={()=>{if(confirm('Сбросить все изменения к исходным данным?')){localStorage.removeItem('bobrov_tree_data');location.reload()}}}>Сбросить к исходным</button></div></footer></>)}
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
